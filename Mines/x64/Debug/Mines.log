@@ -1,2 +1,3 @@
-﻿  Źródło.cpp
+﻿  Main.cpp
+C:\Users\AirU\Minesweeper\Mines\Main.cpp(197,15): warning C4101: 'src': unreferenced local variable
   Mines.vcxproj -> C:\Users\AirU\Minesweeper\x64\Debug\Mines.exe

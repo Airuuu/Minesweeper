@@ -1,0 +1,3 @@
+C:\Users\AirU\Minesweeper\Mines\x64\Debug\Mines.vcxproj.MdMergeInputs.cache
+C:\Users\AirU\Minesweeper\Mines\x64\Debug\Mines.vcxproj.cppwinrt_plat.cache
+C:\Users\AirU\Minesweeper\Mines\x64\Debug\Mines.vcxproj.cppwinrt_comp.cache
