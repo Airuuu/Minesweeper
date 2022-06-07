@@ -15,8 +15,8 @@ struct node;
 
 struct edge
 {
-    node* src, *dest;
-    //vector<node*> dest;
+    node* src/*, *dest*/;
+    vector<node*> dest;
     //int weight;
 };
 
@@ -78,16 +78,16 @@ public:
 
             switch (id)
             {
-            case (1): //RUC
+            case (1): //LUC
                 obtainable = { id + 1, id + 8, id + 9 };
                 break;
-            case(8): // LUC
-                obtainable = { id + 1, id + 8, id + 9 };
+            case(8): // RUC
+                obtainable = { id - 1, id + 7, id + 8 };
                 break;
-            case(57): // LeBC
+            case(57): // LLC
                 obtainable = { id - 8,id - 7,id + 1 };
                 break;
-            case(64): // RBC
+            case(64): // RLC
                 obtainable = { id - 9,id - 8,id - 1 };
                 break;
             case 9 :case 17: case 25: case 33: case 41 : case 49: // LeB
@@ -108,28 +108,30 @@ public:
             }
             sort(obtainable.begin(), obtainable.end());
 
+
+            edge* newEdge = new edge();
+            newEdge->src = src;
             for (auto& check : nodes)
             {
                 if (contains(obtainable, check->index))
                 {
-                    dests.push_back(check);
+                    //dests.push_back(check);
+                    (newEdge->dest).push_back(check);
                 }
             }
-            for (auto& destination : dests)
+            src->edges.push_back(newEdge);
+            
+            /*for (auto& destination : dests)
             {
-                edge* newEdge = new edge();
-                newEdge->src = src;
-                newEdge->dest = destination;
                 //newEdge->weight = weight;
-                src->edges.push_back(newEdge);
-            }
+            }*/
 
             obtainable.clear();
         }
     }
     void addMines(int mines)
     {
-        node* src;
+        node* src = nullptr;
         int id = 0;
         random_device rd;
         mt19937 mt(rd());
@@ -156,21 +158,66 @@ public:
         mineCounter = 0;
         for (auto& node : nodes)
         {
+            if (node->index == mineIndexes[0])
+                src = node;
+        }
+        if (src == nullptr)
+        {
+            cout << "Something went wrong in addMines" << endl;
+            exit;
+            return;
+        }
+        for (auto& edge : src->edges)
+        {
+            if (edge->src->index == mineIndexes[0])
+            {
+                edge->src->value = 9;
+                for (auto& now : edge->dest)
+                {
+                    if (now->index != 9)
+                    {
+                        (now->value)++;
+                        mineCounter++;
+
+                    }
+                }
+                if (src->index == 1)
+                    src = edge->dest[0];
+                else
+                    src = edge->dest[1];
+                if (mineCount = mines)
+                    break;
+                mineIndexes.erase(mineIndexes.begin());
+            }
+
+
+                //cout << now->index << end;
+
+        }
+        /*for (auto& node : nodes)
+        {
             valueHolder = mineIndexes[mineCounter];
+            cout << "value holder " << valueHolder << endl;
             if (node->index == valueHolder)
             {
-                for (auto& edge : node->edges)
+                src = node;
+
+                for (auto& edge : src->edges)
                 {
-                    if (edge->dest->index)
-                    cout << "in" << endl;
-                    (edge->dest->value)++;
+                    cout << "yes " << edge->dest->index << endl;;
+                    
+                    //(edge->dest->value) = 1;
+                    //if (src->value)
+                    //cout << "in" << endl;
+                    //(edge->dest->value) ;
                 }
+                return;
                 node->value = 9;
                 mineCounter++;
             }
             if (mineCounter >= 15)
                 break;
-        }
+        }*/
     }
 
     void printField()
@@ -204,16 +251,26 @@ public:
 
     void testEdges()
     {
-        int id = 10;
+        node* src = nullptr;
         for (auto& node : nodes)
         {
-            if (id == node->index)
+            if (node->index == 8)
+                src = node;
+        }
+        if (src == nullptr)
+        {
+            cout << "Something went wrong in addMines" << endl;
+            exit;
+            return;
+        }
+        for (auto& edge : src->edges)
+        {
+            for (auto& now : edge->dest)
             {
-                for (auto& edge : node->edges)
-                {
-                    cout << edge->dest->index;
-                }
+                cout << "Dest " << now->index << endl;
             }
+
+
         }
     }
 
@@ -231,11 +288,11 @@ int main(int argc, char* args[])
     }
     f.connectNodes();
 
-    //f.testEdges();
-    f.addMines(mines);
-    f.printField();
-    cout << endl;
-    f.testPrintMinefield();
+    f.testEdges();
+     //f.addMines(mines);
+    //f.printField();
+    //cout << endl;
+    //f.testPrintMinefield();
 
     /*random_device rd;
     mt19937 mt(rd());
