@@ -156,43 +156,48 @@ public:
         cout << endl;
 
         mineCounter = 0;
-        for (auto& node : nodes)
+        while (mineCounter != mines)
         {
-            if (node->index == mineIndexes[0])
-                src = node;
-        }
-        if (src == nullptr)
-        {
-            cout << "Something went wrong in addMines" << endl;
-            exit;
-            return;
-        }
-        for (auto& edge : src->edges)
-        {
-            if (edge->src->index == mineIndexes[0])
+            for (auto& node : nodes)
             {
-                edge->src->value = 9;
-                for (auto& now : edge->dest)
-                {
-                    if (now->index != 9)
-                    {
-                        (now->value)++;
-                        mineCounter++;
-
-                    }
-                }
-                if (src->index == 1)
-                    src = edge->dest[0];
-                else
-                    src = edge->dest[1];
-                if (mineCount = mines)
-                    break;
-                mineIndexes.erase(mineIndexes.begin());
+                if (node->index == mineIndexes[0])
+                    src = node;
             }
+            if (src == nullptr)
+            {
+                cout << "Something went wrong in addMines" << endl;
+                exit;
+                return;
+            }
+            for (auto& edge : src->edges)
+            {
+                if (edge->src->index == mineIndexes[0])
+                {
+                    edge->src->value = 9;
+                    mineCounter++;
+                    cout << "Mine at " << src->index << endl;
+                    for (auto& now : edge->dest)
+                    {
+                        if (now->value != 9)
+                        {
+                            (now->value)++;
+                            //mineCounter++;
 
+                        }
+                    }
+                    if (src->index == 1)
+                        src = edge->dest[0];
+                    else
+                        src = edge->dest[1];
+                    //if (mineCount = mines)
+                    //    break;
+                    //mineIndexes.erase(mineIndexes.begin());
 
+                }
+                mineIndexes.erase(mineIndexes.begin());
+                //cout << mineCounter << endl;
                 //cout << now->index << end;
-
+            }
         }
         /*for (auto& node : nodes)
         {
@@ -249,12 +254,12 @@ public:
         }
     }
 
-    void testEdges()
+    void testEdges(int nodeNumber)
     {
         node* src = nullptr;
         for (auto& node : nodes)
         {
-            if (node->index == 8)
+            if (node->index == nodeNumber)
                 src = node;
         }
         if (src == nullptr)
@@ -288,11 +293,14 @@ int main(int argc, char* args[])
     }
     f.connectNodes();
 
-    f.testEdges();
-     //f.addMines(mines);
-    //f.printField();
-    //cout << endl;
-    //f.testPrintMinefield();
+    //int nodeNumber = 1;
+    //f.testEdges(nodeNumber);
+    
+    
+    f.addMines(mines);
+    f.printField();
+    cout << endl;
+    f.testPrintMinefield();
 
     /*random_device rd;
     mt19937 mt(rd());

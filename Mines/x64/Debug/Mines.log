@@ -1,5 +1,5 @@
 ﻿  Main.cpp
-C:\Users\AirU\Minesweeper\Mines\Main.cpp(167,13): warning C4551: function call missing argument list
+C:\Users\AirU\Minesweeper\Mines\Main.cpp(169,17): warning C4551: function call missing argument list
 C:\Users\AirU\Minesweeper\Mines\Main.cpp(151,13): warning C4101: 'valueHolder': unreferenced local variable
-C:\Users\AirU\Minesweeper\Mines\Main.cpp(264,13): warning C4551: function call missing argument list
+C:\Users\AirU\Minesweeper\Mines\Main.cpp(268,13): warning C4551: function call missing argument list
   Mines.vcxproj -> C:\Users\AirU\Minesweeper\x64\Debug\Mines.exe
