@@ -325,20 +325,7 @@ void printGameBoard(vector<node*> nodes)
     }
 }
 
-/*bool bombAround(node* source)
-{
-    for (auto& node : source->edges)
-    {
-        for (auto& now : node->dest)
-        {
-            if (now->value == 9)
-                return true;
-        }
-    }
-    return false;
-}*/
-
-vector<node*> AI_uncover(vector<node*> nodes ,node* n)
+vector<node*> AI_uncover(vector<node*> &nodes ,node* n)
 {
     if (n->covered == 0)
     {
@@ -354,10 +341,10 @@ vector<node*> AI_uncover(vector<node*> nodes ,node* n)
                 if (now->covered == 0)
                 {
                     now->covered = 2;
-                }
-                if (now->value == 0)
-                {
-                    nodes = AI_uncover(nodes, now);
+                    if (now->value == 0)
+                    {
+                        AI_uncover(nodes, now);
+                    }
                 }
             }
         }
@@ -537,6 +524,7 @@ vector<node*> AI_move(Field f, vector<node*> nodes, int rngHolder, int nodeAImov
         nodes = AI_flagging(nodes);
         cout << "FLAGS" << endl;
         f.printGameBoard();
+        cout << endl;
         nodes = AI_makeAmove(nodes, f);
     }
 
@@ -594,6 +582,7 @@ void AI_GameStart(Field f, int nodesTotal, int mines)
     while (minesLeft != 0)
     {
         Sleep(2000);
+        cout << endl;
         nodes = AI_move(f, nodes, 0, nodeAImove);
         //cout << minesLeft << endl;
         //minesLeft--;
