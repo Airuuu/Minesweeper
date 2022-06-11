@@ -1,16 +1,12 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include <SFML/Graphics.hpp>
 #include <time.h>
 #include <algorithm>
 #include <random>
 #include <Windows.h>
 
 using namespace std;
-using namespace sf;
-
-bool uncoveredNodes = false;
 
 struct node;
 
@@ -24,6 +20,7 @@ struct edge
 struct node
 {
     int covered; // 0 - covered , 1 - flag, 2 - uncovered
+    int flagsAround;
     int index;
     vector<edge*> edges;
     int value; // 1-8 save but mine is nearby , 9 - mine, 0 - no mines nearby
@@ -46,6 +43,7 @@ public:
         newNode->index = index;
         newNode->value = 0;
         newNode->covered = 0;
+        newNode->flagsAround = 0;
 
         nodes.push_back(newNode);
     }
@@ -342,18 +340,24 @@ void printGameBoard(vector<node*> nodes)
 
 vector<node*> AI_uncover(vector<node*> nodes ,node* n)
 {
-    n->covered = 2;
-    for (auto& edge : n->edges)
+    if (n->covered == 0)
     {
-        for (auto& now : edge->dest)
+        n->covered = 2;
+        return nodes;
+    }
+    if (n->value == 0)
+    {
+        for (auto& edge : n->edges)
         {
-            now->covered = 2;
-            for (auto& node : now->edges)
+            for (auto& now : edge->dest)
             {
-                for (auto& unc : node->dest)
+                if (now->covered == 0)
                 {
-                    if (unc->value == 0 && unc->covered != 2)
-                        nodes = AI_uncover(nodes, unc);
+                    now->covered = 2;
+                }
+                if (now->value == 0)
+                {
+                    nodes = AI_uncover(nodes, now);
                 }
             }
         }
@@ -363,69 +367,193 @@ vector<node*> AI_uncover(vector<node*> nodes ,node* n)
 
 int getFreeNode(vector<node*> nodes)
 {
-    cout << "inside getfree" << endl;
     random_device rd;
     mt19937 mt(rd());
     uniform_int_distribution<>  rng(1, 64);
     int rngHolder;
-    rngHolder = rng(mt);
+
+
+    vector<int> freeNodes;
+    for (auto& node : nodes)
+    {
+        if (node->covered == 0)
+            freeNodes.push_back( node->index);
+    }
 
     while (true)
     {
-        for (auto& node : nodes)
-        {
-            if (node->index == rngHolder && node->covered == 0)
-                return node->index;
-            else break;
-        }
         rngHolder = rng(mt);
+        if (find(freeNodes.begin(), freeNodes.end(), rngHolder) != freeNodes.end())
+        {
+            return rngHolder;
+        }
     }
+
 }
 
 vector<node*> AI_randomMove(Field &f, vector<node*> nodes, int freeNode)
 {
     if(freeNode == 0)
-        int freeNode = getFreeNode(nodes);
+        freeNode = getFreeNode(nodes);
+    cout << "RANDOM MOVE AT " << freeNode  << endl;
 
-    vector<node*> copy = f.GetNodes();
+    vector<node*> copy;
 
     for (auto& node : nodes)
     {
 
         if (node->index == freeNode)
         {
+            //cout << "DOING SHEIT" << endl;
+            node->covered = 2;
+            copy = AI_uncover(nodes, node);
+            break;
 
-            switch (node->value)
-            {
-            case 9: // gameover TODO/////////////
-                node->covered = 2;
-                break;
-
-            default:
-                node->covered = 2;
-                copy = AI_uncover(nodes, node);
-                break;
-            }
         }
     }
     nodes = copy;
     return nodes;
 }
 
-void AI_flagging(Field f)
+int checkNodesAround(node* node, bool checkFlagged = false)
 {
-    cout << "yes" << endl;
+    int freeNodeCheck = 0;
+    for (auto& edge : node->edges)
+    {
+        for (auto& now : edge->dest)
+        {
+            if (now->covered == 0 || (checkFlagged && now->covered == 1))
+                freeNodeCheck++;
+            
+        }
+    }
+    return freeNodeCheck;
+}
+
+vector<node*> AI_flagging(vector<node*> nodes)
+{
+    vector<node*> uncoveredAroundMines;
+    for (auto& node : nodes)
+    {
+        if ((node->covered == 2 && node->value != 9) && node->value != 0)
+            uncoveredAroundMines.push_back(node);
+        
+    }
+    int nodeValue = 0;
+    int freeNodeCheck;
+
+    for (auto& node : uncoveredAroundMines)
+    {
+        nodeValue = node->value;
+        freeNodeCheck = checkNodesAround(node, true);
+        if (freeNodeCheck == nodeValue)
+        {
+            for (auto& edge : node->edges)
+            {
+                for (auto& now : edge->dest)
+                {
+                    if (now->covered == 0)
+                    {
+                        now->covered = 1;
+                        for (auto& nowEdge : now->edges)
+                        {
+                            for (auto& newNow : nowEdge->dest)
+                            {
+                                (newNow->flagsAround)++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return nodes;
+}
+
+
+bool movePossible(node* n)
+{
+    for (auto& edge : n->edges)
+    {
+        for (auto& now : edge->dest)
+        {
+            if (now->covered == 0)
+                return true;
+        }
+    }
+    return false;
+}
+
+vector<node*> AI_makeAmove(vector<node*> nodes, Field &f)
+{
+    node* n = nullptr;
+    vector<node*> copy = nodes;
+    for (auto& node : nodes)
+    {
+        if (node->covered == 2 && node->value != 0)
+        {
+            //cout << node->value << " " << node->flagsAround << endl;
+            if (node->value == node->flagsAround && movePossible(node) && node->covered == 2)
+            {
+                n = node;
+                break;
+            }
+        }
+    }
+    if (n != nullptr)
+    {
+        //cout << n->index << endl;
+        //for (auto& node : nodes)
+        ///{
+
+            //if (node->index == n->index)
+            //{
+                n->covered = 2;
+                copy = AI_uncover(nodes, n);
+                //break;
+            //}
+       /// }
+    }
+    else
+    {
+        //cout << "nullptr" << endl;
+        nodes = AI_randomMove(f, nodes, 0);
+    }
+    nodes = copy;
+    return nodes;
 }
 
 vector<node*> AI_move(Field f, vector<node*> nodes, int rngHolder, int nodeAImove)
 {
-    if (uncoveredNodes)
-        AI_flagging(f);
-    if(nodeAImove == 0)
+    // flagging operation is not counted as move
+    
+    if (nodeAImove == 0)
+    {
         nodes = AI_randomMove(f, nodes, rngHolder);
+        return nodes;
+    }
+    else
+    {
+        nodes = AI_flagging(nodes);
+        cout << "FLAGS" << endl;
+        f.printGameBoard();
+        nodes = AI_makeAmove(nodes, f);
+    }
 
 
     return nodes;
+}
+
+void isGameOver(vector<node*> nodes)
+{
+    for (auto& node : nodes)
+    {
+        if (node->value == 9 && node->covered == 2)
+        {
+            cout << "GAME OVER, SAPPER IS WRONG ONLY ONCE!" << endl;
+            exit(9);
+        }
+    }
 }
 
 void AI_GameStart(Field f, int nodesTotal, int mines)
@@ -441,9 +569,13 @@ void AI_GameStart(Field f, int nodesTotal, int mines)
     //1st move is always random, during that, generate the GameBoard and set mines
     random_device rd;
     mt19937 mt(rd());
-    uniform_int_distribution<>  rng(1, 64);
-    int rngHolder;
-    rngHolder = rng(mt); // 1st move
+    uniform_int_distribution<>  rng(27, 29);
+    uniform_int_distribution<>  rng2(35, 37);
+    uniform_int_distribution<>  rng3(43, 45);
+    vector<int> roller = { rng(mt), rng2(mt), rng3(mt)};
+    int random = rand() % roller.size();
+    int rngHolder = roller[random]; // 1st move
+    //int rngHolder = 36;
 
     for (int i = 1; i <= nodesTotal; i++)
     {
@@ -451,47 +583,35 @@ void AI_GameStart(Field f, int nodesTotal, int mines)
     }
     f.connectNodes();
     f.addMines(mines, rngHolder);
+    //f.testPrintField();
     //cout << rngHolder << endl;
     vector<node*> nodes = f.GetNodes();
     nodes = AI_move(f, nodes, rngHolder, nodeAImove);
-    ++nodeAImove;
 
     printGameBoard(nodes);
-    cout << nodeAImove << endl << endl << endl;
+    cout << "Moves : " << ++nodeAImove << endl << endl << endl;
 
     while (minesLeft != 0)
     {
         Sleep(2000);
-        nodes = AI_move(f, nodes, rngHolder, nodeAImove);
-        //nodeAImove = AI_move(f, nodeAImove, 0);
+        nodes = AI_move(f, nodes, 0, nodeAImove);
         //cout << minesLeft << endl;
         //minesLeft--;
         //cout << "\x1B[2J\x1B[H";
         f.printGameBoard();
-        cout << ++nodeAImove << endl << endl << endl;
-        break;
+        cout << "Moves : " << ++nodeAImove << endl << endl << endl;
+        isGameOver(nodes);
+        //break;
     }
 }
+
+
 
 int main(int argc, char* args[])
 {
     int size = 8;
     int mines = 15;
     Field f;
-    /*for (int i = 1; i <= pow(size, 2); i++)
-    {
-        f.CreateNode(i);
-    }
-    f.connectNodes();
-    f.addMines(mines);*/
-
-    //int nodeNumber = 1;
-    //f.testEdges(nodeNumber);
-    
-    
-    //f.printField();
-    //cout << endl;
-    //f.testPrintMinefield();
     AI_GameStart(f, pow(size,2), mines);
 
     return 0;
