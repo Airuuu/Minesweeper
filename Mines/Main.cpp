@@ -140,7 +140,7 @@ public:
         {
             rngHolder = rng(mt);
             if ((find(mineIndexes.begin(), mineIndexes.end(), rngHolder) == mineIndexes.end()) && 
-                (find(restricted.begin(), restricted.end(), rngHolder) == restricted.end())/*rngHolder != AI_1stmove*/)
+                (find(restricted.begin(), restricted.end(), rngHolder) == restricted.end()))
             {
                 mineIndexes.push_back(rngHolder);
                 mineCounter++;
@@ -396,6 +396,10 @@ vector<node*> AI_uncover(vector<node*> &nodes ,node* n)
     if (n->covered == 0)
     {
         n->covered = 2;
+        if (n->value == 0) // works - marker for me (if error occurs, its propably here)
+        {
+            AI_uncover(nodes, n);
+        }
         return nodes;
     }
     for (auto& edge : n->edges)
@@ -441,7 +445,7 @@ int getFreeNode(vector<node*> nodes)
 
 }
 
-vector<node*> AI_randomMove(Field &f, vector<node*> nodes, int freeNode) // check if its fine? else change
+vector<node*> AI_randomMove(Field &f, vector<node*> nodes, int freeNode)
 {
     bool uncover = true;
     if (freeNode == 0) uncover = false;
@@ -646,7 +650,7 @@ void AI_GameStart(Field f, int nodesTotal, int mines)
 int main(int argc, char* args[])
 {
     int size = 8;
-    int mines = 8;
+    int mines = 15;
     Field f;
     AI_GameStart(f, pow(size,2), mines);
 
