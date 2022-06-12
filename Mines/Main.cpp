@@ -288,6 +288,32 @@ public:
     }
     //---------------------------------------------------------------------
 };
+void isGameOver(vector<node*> nodes)
+{
+    bool anyCovered = false;
+    for (auto& node : nodes)
+    {
+        //check remaining bombs and compare to remaining fields instead
+        if (node->covered == 0)
+        {
+            anyCovered = true;
+        }
+
+        if (node->value == 9 && node->covered == 2)
+        {
+            cout << "GAME OVER, SAPPER IS WRONG ONLY ONCE!" << endl;
+            exit(9);
+        }
+    }
+    if (!anyCovered)
+    {
+        std::cout << "Computer Won!" << std::endl;
+        std::cout << "Computer Won!" << std::endl;
+        std::cout << "Computer Won!" << std::endl;
+        exit(0);
+    }
+}
+
 void printGameBoard(vector<node*> nodes)
 {
     int counter = 0;
@@ -327,13 +353,17 @@ void printGameBoard(vector<node*> nodes)
 
 vector<node*> AI_uncover(vector<node*> &nodes ,node* n)
 {
+    if (n->covered == 1)
+    {
+        return nodes;
+    }
     if (n->covered == 0)
     {
         n->covered = 2;
         return nodes;
     }
-    if (n->value == 0)
-    {
+    //if (n->value == 0)
+    //{
         for (auto& edge : n->edges)
         {
             for (auto& now : edge->dest)
@@ -347,7 +377,7 @@ vector<node*> AI_uncover(vector<node*> &nodes ,node* n)
                     }
                 }
             }
-        }
+        //}
     }
     return nodes;
 }
@@ -378,9 +408,30 @@ int getFreeNode(vector<node*> nodes)
 
 }
 
-vector<node*> AI_randomMove(Field &f, vector<node*> nodes, int freeNode)
+vector<node*> AI_randomMove(Field &f, vector<node*> nodes, int freeNode) // check if its fine? else change
 {
-    if(freeNode == 0)
+    bool uncover = true;
+    if (freeNode == 0) uncover = false;
+    if (freeNode == 0)
+        freeNode = getFreeNode(nodes);
+    cout << "RANDOM MOVE AT " << freeNode << endl;
+
+    vector<node*> copy;
+
+    for (auto& node : nodes)
+    {
+
+        if (node->index == freeNode)
+        {
+            if (uncover) node->covered = 2;
+            copy = AI_uncover(nodes, node);
+            break;
+
+        }
+    }
+    nodes = copy;
+    return nodes;
+    /*if (freeNode == 0)
         freeNode = getFreeNode(nodes);
     cout << "RANDOM MOVE AT " << freeNode  << endl;
 
@@ -399,7 +450,7 @@ vector<node*> AI_randomMove(Field &f, vector<node*> nodes, int freeNode)
         }
     }
     nodes = copy;
-    return nodes;
+    return nodes;*/
 }
 
 int checkNodesAround(node* node, bool checkFlagged = false)
@@ -524,6 +575,7 @@ vector<node*> AI_move(Field f, vector<node*> nodes, int rngHolder, int nodeAImov
         nodes = AI_flagging(nodes);
         cout << "FLAGS" << endl;
         f.printGameBoard();
+        isGameOver(nodes);
         cout << endl;
         nodes = AI_makeAmove(nodes, f);
     }
@@ -532,22 +584,10 @@ vector<node*> AI_move(Field f, vector<node*> nodes, int rngHolder, int nodeAImov
     return nodes;
 }
 
-void isGameOver(vector<node*> nodes)
-{
-    for (auto& node : nodes)
-    {
-        if (node->value == 9 && node->covered == 2)
-        {
-            cout << "GAME OVER, SAPPER IS WRONG ONLY ONCE!" << endl;
-            exit(9);
-        }
-    }
-}
+
 
 void AI_GameStart(Field f, int nodesTotal, int mines)
 {
-    //f.printGameBoard();
-    //cout << endl;
     int nodeAImove = 0;
     int freeNodes = nodesTotal - mines;
     int minesFlagged = 0;
@@ -563,7 +603,6 @@ void AI_GameStart(Field f, int nodesTotal, int mines)
     vector<int> roller = { rng(mt), rng2(mt), rng3(mt)};
     int random = rand() % roller.size();
     int rngHolder = roller[random]; // 1st move
-    //int rngHolder = 36;
 
     for (int i = 1; i <= nodesTotal; i++)
     {
@@ -571,8 +610,8 @@ void AI_GameStart(Field f, int nodesTotal, int mines)
     }
     f.connectNodes();
     f.addMines(mines, rngHolder);
-    //f.testPrintField();
-    //cout << rngHolder << endl;
+
+
     vector<node*> nodes = f.GetNodes();
     nodes = AI_move(f, nodes, rngHolder, nodeAImove);
 
@@ -586,7 +625,6 @@ void AI_GameStart(Field f, int nodesTotal, int mines)
         nodes = AI_move(f, nodes, 0, nodeAImove);
         //cout << minesLeft << endl;
         //minesLeft--;
-        //cout << "\x1B[2J\x1B[H";
         f.printGameBoard();
         cout << "Moves : " << ++nodeAImove << endl << endl << endl;
         isGameOver(nodes);
