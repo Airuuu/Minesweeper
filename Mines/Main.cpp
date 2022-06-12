@@ -14,7 +14,6 @@ struct edge
 {
     node* src;
     vector<node*> dest;
-    //int weight;
 };
 
 struct node
@@ -24,7 +23,6 @@ struct node
     int index;
     vector<edge*> edges;
     int value; // 1-8 save but mine is nearby , 9 - mine, 0 - no mines nearby
-    //but textures are : 0 - empty (nothing), 1-8 - numbers (mines nearby), 9 - mine, 10 - block covered, 11 - block flagged
 };
 
 class Field
@@ -288,9 +286,37 @@ public:
     }
     //---------------------------------------------------------------------
 };
-void isGameOver(vector<node*> nodes)
+int minesFlaggedCorrectly(vector<node*> nodes)
+{
+    int counter = 0;
+    for (auto& node : nodes)
+    {
+        if (node->value == 9 && node->covered == 1)
+        {
+            counter++;
+        }
+    }
+    return counter;
+}
+
+int countFlagged(vector<node*> nodes)
+{
+    int counter = 0;
+    for (auto& node : nodes)
+    {
+        if (node->covered == 1)
+        {
+            counter++;
+        }
+    }
+    return counter;
+}
+
+void isGameOver(vector<node*> nodes, int nodeAImove, int mines)
 {
     bool anyCovered = false;
+    int minesFlagged = countFlagged(nodes);
+    int minesLeft = mines - minesFlaggedCorrectly(nodes);
     for (auto& node : nodes)
     {
         //check remaining bombs and compare to remaining fields instead
@@ -302,14 +328,20 @@ void isGameOver(vector<node*> nodes)
         if (node->value == 9 && node->covered == 2)
         {
             cout << "GAME OVER, SAPPER IS WRONG ONLY ONCE!" << endl;
+            cout << "Moves : " << nodeAImove << endl <<
+                "Flags : " << minesFlagged << endl <<
+                "Mines left : " << minesLeft << endl <<
+                "Explosion at node: " << node->index << endl << endl << endl;
             exit(9);
         }
     }
     if (!anyCovered)
     {
-        std::cout << "Computer Won!" << std::endl;
-        std::cout << "Computer Won!" << std::endl;
-        std::cout << "Computer Won!" << std::endl;
+        cout << "COMPUTER WON!" << std::endl;
+
+        cout << "Moves : " << nodeAImove << endl <<
+            "Flags : " << minesFlagged << endl <<
+            "Mines left : " << minesLeft << endl;
         exit(0);
     }
 }
@@ -362,22 +394,19 @@ vector<node*> AI_uncover(vector<node*> &nodes ,node* n)
         n->covered = 2;
         return nodes;
     }
-    //if (n->value == 0)
-    //{
-        for (auto& edge : n->edges)
+    for (auto& edge : n->edges)
+    {
+        for (auto& now : edge->dest)
         {
-            for (auto& now : edge->dest)
+            if (now->covered == 0)
             {
-                if (now->covered == 0)
+                now->covered = 2;
+                if (now->value == 0)
                 {
-                    now->covered = 2;
-                    if (now->value == 0)
-                    {
-                        AI_uncover(nodes, now);
-                    }
+                    AI_uncover(nodes, now);
                 }
             }
-        //}
+        }
     }
     return nodes;
 }
@@ -386,7 +415,7 @@ int getFreeNode(vector<node*> nodes)
 {
     random_device rd;
     mt19937 mt(rd());
-    uniform_int_distribution<>  rng(1, 64);
+    uniform_int_distribution<>  rng(1, nodes.size());
     int rngHolder;
 
 
@@ -431,26 +460,6 @@ vector<node*> AI_randomMove(Field &f, vector<node*> nodes, int freeNode) // chec
     }
     nodes = copy;
     return nodes;
-    /*if (freeNode == 0)
-        freeNode = getFreeNode(nodes);
-    cout << "RANDOM MOVE AT " << freeNode  << endl;
-
-    vector<node*> copy;
-
-    for (auto& node : nodes)
-    {
-
-        if (node->index == freeNode)
-        {
-            //cout << "DOING SHEIT" << endl;
-            node->covered = 2;
-            copy = AI_uncover(nodes, node);
-            break;
-
-        }
-    }
-    nodes = copy;
-    return nodes;*/
 }
 
 int checkNodesAround(node* node, bool checkFlagged = false)
@@ -561,7 +570,7 @@ vector<node*> AI_makeAmove(vector<node*> nodes, Field &f)
     return nodes;
 }
 
-vector<node*> AI_move(Field f, vector<node*> nodes, int rngHolder, int nodeAImove)
+vector<node*> AI_move(Field f, vector<node*> nodes, int rngHolder, int nodeAImove, int mines)
 {
     // flagging operation is not counted as move
     
@@ -574,8 +583,8 @@ vector<node*> AI_move(Field f, vector<node*> nodes, int rngHolder, int nodeAImov
     {
         nodes = AI_flagging(nodes);
         cout << "FLAGS" << endl;
-        f.printGameBoard();
-        isGameOver(nodes);
+        printGameBoard();
+        isGameOver(nodes, nodeAImove, mines);
         cout << endl;
         nodes = AI_makeAmove(nodes, f);
     }
@@ -613,22 +622,29 @@ void AI_GameStart(Field f, int nodesTotal, int mines)
 
 
     vector<node*> nodes = f.GetNodes();
-    nodes = AI_move(f, nodes, rngHolder, nodeAImove);
+    nodes = AI_move(f, nodes, rngHolder, nodeAImove, mines);
 
     printGameBoard(nodes);
-    cout << "Moves : " << ++nodeAImove << endl << endl << endl;
+    cout << "Moves : " << ++nodeAImove << endl <<
+        "Flags : " << minesFlagged << endl <<
+        "Mines left : " << minesLeft << endl << endl << endl;
 
-    while (minesLeft != 0)
+    while (true)
     {
         Sleep(2000);
         cout << endl;
-        nodes = AI_move(f, nodes, 0, nodeAImove);
+        nodes = AI_move(f, nodes, 0, nodeAImove, mines);
         //cout << minesLeft << endl;
         //minesLeft--;
-        f.printGameBoard();
-        cout << "Moves : " << ++nodeAImove << endl << endl << endl;
-        isGameOver(nodes);
-        //break;
+        printGameBoard(nodes);
+        isGameOver(nodes, nodeAImove, mines);
+
+
+        minesFlagged = countFlagged(nodes);
+        minesLeft = mines - minesFlaggedCorrectly(nodes);
+        cout << "Moves : " << ++nodeAImove << endl <<
+            "Flags : " << minesFlagged << endl <<
+            "Mines left : " << minesLeft << endl << endl << endl;
     }
 }
 

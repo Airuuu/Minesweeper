@@ -1,6 +1,11 @@
 ﻿  Main.cpp
-C:\Users\AirU\Minesweeper\Mines\Main.cpp(166,17): warning C4551: function call missing argument list
-C:\Users\AirU\Minesweeper\Mines\Main.cpp(151,13): warning C4101: 'valueHolder': unreferenced local variable
-C:\Users\AirU\Minesweeper\Mines\Main.cpp(278,13): warning C4551: function call missing argument list
-C:\Users\AirU\Minesweeper\Mines\Main.cpp(642,24): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\AirU\Minesweeper\Mines\Main.cpp(164,17): warning C4551: function call missing argument list
+C:\Users\AirU\Minesweeper\Mines\Main.cpp(149,13): warning C4101: 'valueHolder': unreferenced local variable
+C:\Users\AirU\Minesweeper\Mines\Main.cpp(276,13): warning C4551: function call missing argument list
+C:\Users\AirU\Minesweeper\Mines\Main.cpp(418,52): warning C4267: 'argument': conversion from 'size_t' to '_Ty', possible loss of data
+          with
+          [
+              _Ty=int
+          ]
+C:\Users\AirU\Minesweeper\Mines\Main.cpp(658,24): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
   Mines.vcxproj -> C:\Users\AirU\Minesweeper\x64\Debug\Mines.exe
