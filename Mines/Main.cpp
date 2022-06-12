@@ -227,7 +227,8 @@ public:
     ////////////////////////
     /////TEST FUNCTIONS/////
     ////////////////////////
-
+    /////////IGNORE/////////
+    ////////////////////////
     void testPrintField()
     {
         int counter = 0;
@@ -284,7 +285,9 @@ public:
             }
         }
     }
-    //---------------------------------------------------------------------
+    ////////////////////////
+    ///TEST FUNCTIONS END///
+    ////////////////////////
 };
 int minesFlaggedCorrectly(vector<node*> nodes)
 {
@@ -349,6 +352,7 @@ void isGameOver(vector<node*> nodes, int nodeAImove, int mines)
 void printGameBoard(vector<node*> nodes)
 {
     int counter = 0;
+    int boardsize = sqrt(nodes.size());
     for (auto& node : nodes)
     {
         if (counter == 0)
@@ -375,7 +379,7 @@ void printGameBoard(vector<node*> nodes)
             }
         }
         counter++;
-        if (counter == 8)
+        if (counter == boardsize)
         {
             cout << endl;
             counter = 0;
@@ -539,7 +543,6 @@ vector<node*> AI_makeAmove(vector<node*> nodes, Field &f)
     {
         if (node->covered == 2 && node->value != 0)
         {
-            //cout << node->value << " " << node->flagsAround << endl;
             if (node->value == node->flagsAround && movePossible(node) && node->covered == 2)
             {
                 n = node;
@@ -549,21 +552,11 @@ vector<node*> AI_makeAmove(vector<node*> nodes, Field &f)
     }
     if (n != nullptr)
     {
-        //cout << n->index << endl;
-        //for (auto& node : nodes)
-        ///{
-
-            //if (node->index == n->index)
-            //{
-                n->covered = 2;
-                copy = AI_uncover(nodes, n);
-                //break;
-            //}
-       /// }
+        n->covered = 2;
+        copy = AI_uncover(nodes, n);
     }
     else
     {
-        //cout << "nullptr" << endl;
         nodes = AI_randomMove(f, nodes, 0);
     }
     nodes = copy;
@@ -583,7 +576,7 @@ vector<node*> AI_move(Field f, vector<node*> nodes, int rngHolder, int nodeAImov
     {
         nodes = AI_flagging(nodes);
         cout << "FLAGS" << endl;
-        printGameBoard();
+        printGameBoard(nodes);
         isGameOver(nodes, nodeAImove, mines);
         cout << endl;
         nodes = AI_makeAmove(nodes, f);
@@ -653,7 +646,7 @@ void AI_GameStart(Field f, int nodesTotal, int mines)
 int main(int argc, char* args[])
 {
     int size = 8;
-    int mines = 15;
+    int mines = 8;
     Field f;
     AI_GameStart(f, pow(size,2), mines);
 
